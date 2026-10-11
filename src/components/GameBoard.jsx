@@ -20,7 +20,8 @@ function GameBoard({
   onGetHint,
   onNewGame,
 }) {
-  const remainingAttempts = maxAttempts - attempts
+  const isUnlimited = maxAttempts === 9999
+  const remainingAttempts = isUnlimited ? "∞" : maxAttempts - attempts
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
@@ -43,27 +44,31 @@ function GameBoard({
         />
       </div>
 
-      {/* Attempts indicator */}
+      {/* Attempts indicator - unlimited mode */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex items-center gap-1">
-          {Array.from({ length: maxAttempts }, (_, i) => (
-            <div
-              key={i}
-              className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${
-                i < attempts
-                  ? 'bg-green-600 text-white'
-                  : i === attempts && !gameOver
-                  ? 'bg-yellow-500 text-black'
-                  : 'bg-gray-700 text-gray-500'
-              }`}
-            >
-              {i + 1}
-            </div>
-          ))}
-        </div>
-        <span className="text-gray-400 ml-2 text-sm">
-          {remainingAttempts} attempts remaining
-        </span>
+        {isUnlimited ? (
+          <div className="flex items-center gap-2">
+            <div className="text-2xl font-bold text-green-400">∞</div>
+            <span className="text-gray-400 text-sm">Unlimited guesses available</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            {Array.from({ length: maxAttempts }, (_, i) => (
+              <div
+                key={i}
+                className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${
+                  i < attempts
+                    ? 'bg-green-600 text-white'
+                    : i === attempts && !gameOver
+                    ? 'bg-yellow-500 text-black'
+                    : 'bg-gray-700 text-gray-500'
+                }`}
+              >
+                {i + 1}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Search input */}

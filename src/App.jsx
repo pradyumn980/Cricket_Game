@@ -15,7 +15,7 @@ function App() {
   const [won, setWon] = useState(false)
   const [guesses, setGuesses] = useState([])
   const [attempts, setAttempts] = useState(0)
-  const [maxAttempts] = useState(5)
+  const [maxAttempts] = useState(9999)
   const [hintsRemaining, setHintsRemaining] = useState(3)
   const [hintMessage, setHintMessage] = useState('')
   const [score, setScore] = useState(0)
@@ -65,9 +65,9 @@ function App() {
     setStats({ totalGames: 0, gamesWon: 0, averageScore: 0, streak: 0 })
   }
 
-  // Get a new daily target player
+  // Get a new random target player (different each session/page refresh)
   const getNewTargetPlayer = () => {
-    const newTarget = getDailyPlayer()
+    const newTarget = getRandomPlayer()
     setTargetPlayer(newTarget)
     setScore(0)
   }
@@ -163,22 +163,8 @@ function App() {
     })
 
     setGuesses(prev => [...prev, { ...newGuess, comparison, score: guessScore, player: guessedPlayer }])
-
-    if (attempts + 1 >= maxAttempts) {
-      setGameOver(true)
-      setWon(false)
-
-      const newScoreEntry = {
-        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
-        name: targetPlayer.name,
-        date: new Date().toLocaleDateString(),
-        score: guessScore,
-        attempts: attempts + 1,
-        target: targetPlayer.name,
-        hintsUsed: 3 - hintsRemaining
-      }
-      setHighScores(prev => [newScoreEntry, ...prev].sort((a, b) => b.score - a.score).slice(0, 10))
-    }
+    // Game now ends only when player wins (all attributes correct)
+    // No more attempt limit - unlimited guesses!
   }
 
   // Get hint
@@ -270,7 +256,7 @@ function App() {
             <h2 className="text-3xl font-bold text-white mb-4">Welcome to Guess the Cricketer!</h2>
             <p className="text-gray-400 mb-6">
               Guess today's cricketer based on various statistics and hints.
-              You have {maxAttempts} attempts to identify the player!
+              You have unlimited guesses to identify the player! Keep trying until you get it right.
             </p>
             <button
               onClick={startNewGame}

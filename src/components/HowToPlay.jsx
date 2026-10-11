@@ -54,7 +54,7 @@ function HowToPlay({ onClose }) {
           </div>
 
           <p>
-            <strong className="text-green-400">Goal</strong>: Guess the correct cricketer in as few attempts as possible!
+            <strong className="text-green-400">Goal</strong>: Guess the correct cricketer! You have unlimited guesses — keep going until you find the right player.
           </p>
 
           <p>
@@ -68,7 +68,7 @@ function HowToPlay({ onClose }) {
           </ul>
 
           <p>
-            <strong className="text-green-400">Game Modes</strong>: Daily Challenge, Random Mode, IPL Mode, India Mode, International Mode.
+            <strong className="text-green-400">Game Modes</strong>: Random Mode, IPL Mode, India Mode, International Mode.
           </p>
         </div>
 
