@@ -66,7 +66,7 @@ function GuessHistory({ guesses }) {
           <div className="divide-y divide-gray-700">
             {guesses.map((guess, idx) => (
               <div key={idx} className="grid grid-cols-8 gap-2 items-center p-2 text-sm">
-                <div className="font-medium text-white truncate">{guess.player.name}</div>
+                <div className="font-medium text-white truncate">{guess.name}</div>
                 <div>
                   <span className={`px-1.5 py-0.5 rounded text-xs ${getStatusColor(guess.comparison.country.status)}`}>
                     {getStatusLabel(guess.comparison.country.status)}

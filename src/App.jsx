@@ -33,10 +33,18 @@ function App() {
     const savedStats = localStorage.getItem('cricket-stats')
 
     if (savedHighScores) {
-      setHighScores(JSON.parse(savedHighScores))
+      try {
+        setHighScores(JSON.parse(savedHighScores))
+      } catch (error) {
+        console.error('Unable to parse saved high scores:', error)
+      }
     }
     if (savedStats) {
-      setStats(JSON.parse(savedStats))
+      try {
+        setStats(JSON.parse(savedStats))
+      } catch (error) {
+        console.error('Unable to parse saved stats:', error)
+      }
     }
   }, [])
 
@@ -48,6 +56,14 @@ function App() {
   useEffect(() => {
     localStorage.setItem('cricket-stats', JSON.stringify(stats))
   }, [stats])
+
+  const resetLeaderboard = () => {
+    setHighScores([])
+  }
+
+  const resetStats = () => {
+    setStats({ totalGames: 0, gamesWon: 0, averageScore: 0, streak: 0 })
+  }
 
   // Get a new daily target player
   const getNewTargetPlayer = () => {
@@ -93,80 +109,75 @@ function App() {
 
     // Calculate new score based on comparison
     let guessScore = 0
-    let hintsUsed = 0
 
-    // Check if guess is correct
-    const allCorrect = Object.values(comparison).every(
-      attribute => attribute.status === 'correct'
-    )
-    const allIncorrect = Object.values(comparison).every(
-      attribute => attribute.status === 'incorrect' || attribute.status === 'different'
-    )
+    const comparisonKeys = Object.keys(comparison).filter((key) => key !== 'similarityScore')
+    const allCorrect = comparisonKeys.every((key) => comparison[key]?.status === 'correct')
 
     if (allCorrect) {
-      // Perfect guess
       guessScore = 250
       setWon(true)
       setGameOver(true)
+      setAttempts(prev => prev + 1)
+      setScore(prev => prev + guessScore)
 
-      // Update stats
       setStats(prev => {
-        const newStats = {
+        const totalGames = prev.totalGames + 1
+        const averageScore = ((prev.averageScore * prev.totalGames) + guessScore) / totalGames
+        return {
           ...prev,
-          totalGames: prev.totalGames + 1,
+          totalGames,
           gamesWon: prev.gamesWon + 1,
-          averageScore: ((prev.averageScore * prev.totalGames) + 250) / (prev.totalGames + 1),
+          averageScore,
           streak: prev.streak + 1
         }
-        return newStats
       })
 
-      // Add to high scores
       const newScoreEntry = {
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        name: targetPlayer.name,
         date: new Date().toLocaleDateString(),
-        score: 250,
-        attempts: 1,
+        score: guessScore,
+        attempts: attempts + 1,
         target: targetPlayer.name,
-        hintsUsed: 0
+        hintsUsed: 3 - hintsRemaining
       }
       setHighScores(prev => [newScoreEntry, ...prev].sort((a, b) => b.score - a.score).slice(0, 10))
+      setGuesses(prev => [...prev, { ...newGuess, comparison, score: guessScore, player: guessedPlayer }])
+      return
+    }
 
-    } else {
-      // Regular guess
-      guessScore = comparison.similarityScore
-      setScore(prev => prev + guessScore)
-      setAttempts(prev => prev + 1)
+    guessScore = comparison.similarityScore
+    setScore(prev => prev + guessScore)
+    setAttempts(prev => prev + 1)
 
-      // Update stats
-      setStats(prev => {
-        const newStats = {
-          ...prev,
-          totalGames: prev.totalGames + 1,
-          gamesWon: prev.gamesWon + (allCorrect ? 1 : 0),
-          averageScore: ((prev.averageScore * prev.totalGames) + guessScore) / (prev.totalGames + 1),
-          streak: allCorrect ? prev.streak + 1 : 0
-        }
-        return newStats
-      })
-
-      // Add to guesses
-      setGuesses(prev => [...prev, { ...newGuess, comparison, score: guessScore }])
-
-      // Check if game over (attempts used up)
-      if (attempts + 1 >= maxAttempts) {
-        setGameOver(true)
-        setWon(false)
-
-        // Add to high scores
-        const newScoreEntry = {
-          date: new Date().toLocaleDateString(),
-          score: guessScore,
-          attempts: attempts + 1,
-          target: targetPlayer.name,
-          hintsUsed: 3 - hintsRemaining
-        }
-        setHighScores(prev => [newScoreEntry, ...prev].sort((a, b) => b.score - a.score).slice(0, 10))
+    setStats(prev => {
+      const totalGames = prev.totalGames + 1
+      const averageScore = ((prev.averageScore * prev.totalGames) + guessScore) / totalGames
+      return {
+        ...prev,
+        totalGames,
+        gamesWon: prev.gamesWon,
+        averageScore,
+        streak: 0
       }
+    })
+
+    setGuesses(prev => [...prev, { ...newGuess, comparison, score: guessScore, player: guessedPlayer }])
+
+    if (attempts + 1 >= maxAttempts) {
+      setGameOver(true)
+      setWon(false)
+
+      const newScoreEntry = {
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        name: targetPlayer.name,
+        date: new Date().toLocaleDateString(),
+        score: guessScore,
+        attempts: attempts + 1,
+        target: targetPlayer.name,
+        hintsUsed: 3 - hintsRemaining
+      }
+      setHighScores(prev => [newScoreEntry, ...prev].sort((a, b) => b.score - a.score).slice(0, 10))
     }
   }
 
@@ -216,11 +227,18 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'how-to-play':
-        return <HowToPlay />
+        return <HowToPlay onClose={() => setActiveTab('play')} />
       case 'leaderboard':
-        return <Leaderboard scores={highScores} />
+        return <Leaderboard leaderboard={highScores} onReset={resetLeaderboard} />
       case 'stats':
-        return <Stats stats={stats} />
+        return <Stats stats={{
+          gamesPlayed: stats.totalGames,
+          gamesWon: stats.gamesWon,
+          winPercentage: stats.totalGames ? Math.round((stats.gamesWon / stats.totalGames) * 100) : 0,
+          averageAttempts: stats.totalGames ? (stats.totalGames / Math.max(stats.gamesWon, 1)).toFixed(1) : 0,
+          bestScore: Math.max(...highScores.map((entry) => entry.score), 0),
+          currentStreak: stats.streak
+        }} onReset={resetStats} />
       default:
         return (
           <GameBoard

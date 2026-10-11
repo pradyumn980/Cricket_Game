@@ -23,7 +23,7 @@ function HintSystem({ hintsRemaining, onGetHint, hintMessage }) {
         </div>
         <div>
           <p className="text-sm font-medium text-gray-300">Hints</p>
-          <p className="text-base font-bold text-white">{3 - (3 - hintsRemaining)} / 3 used</p>
+          <p className="text-base font-bold text-white">{3 - hintsRemaining} / 3 used</p>
         </div>
         <div className="ml-auto">
           <button
