@@ -87,7 +87,7 @@ function App() {
 
   // Handle player guess
   const handleGuess = (guessedPlayer) => {
-    if (!gameStarted || gameOver) return
+    if (!gameStarted || gameOver || !targetPlayer || !guessedPlayer) return
 
     const newGuess = {
       id: guessedPlayer.id,

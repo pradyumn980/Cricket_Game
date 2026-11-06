@@ -26,6 +26,19 @@ function GuessRow({ guessResult, index }) {
     return direction === 'higher' ? '⬆️' : '⬇️'
   }
 
+  const getDirectionBadge = (direction) => {
+    if (!direction) return null
+    return direction === 'higher' ? (
+      <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-600/40 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+        ⬆️ More
+      </span>
+    ) : (
+      <span className="text-[10px] font-bold text-amber-300 bg-amber-950/70 border border-amber-600/40 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+        ⬇️ Less
+      </span>
+    )
+  }
+
   const getStatusLabel = (status) => {
     switch (status) {
       case 'correct':
@@ -133,15 +146,15 @@ function GuessRow({ guessResult, index }) {
           </div>
         </div>
 
-        {/* Runs */}
+        {/* Runs (Score) */}
         <div className="flex items-center justify-between bg-gray-900 rounded px-3 py-2">
-          <span className="text-gray-400 text-sm">Runs</span>
-          <div className="flex items-center gap-1">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.runs.status)}`}>
-              {getStatusLabel(comparison.runs.status)}
+          <span className="text-gray-400 text-sm">Score (Runs)</span>
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.runs?.status)}`}>
+              {getStatusLabel(comparison.runs?.status)}
             </span>
-            <span className="text-white text-sm">{comparison.runs.value.toLocaleString()}</span>
-            {getDirectionIcon(comparison.runs.direction)}
+            <span className="text-white text-sm font-semibold">{(comparison.runs?.value ?? 0).toLocaleString()}</span>
+            {getDirectionBadge(comparison.runs?.direction)}
           </div>
         </div>
 

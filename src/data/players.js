@@ -2015,7 +2015,7 @@ export const players = [
   },
   {
     id: 'nuwan-jin',
-    nname: 'Nuwan Jinadasa',
+    name: 'Nuwan Jinadasa',
     country: 'Sri Lanka',
     role: 'All-rounder',
     battingStyle: 'Right Hand',

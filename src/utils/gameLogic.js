@@ -1,6 +1,6 @@
 // src/utils/gameLogic.js
 
-import { players } from '../data/players'
+import { players } from '../data/players.js'
 
 /**
  * Find a player by ID in the dataset.
@@ -38,48 +38,64 @@ export function getDailyPlayer() {
  * Returns { status: 'correct' | 'close' | 'incorrect', value: string }
  */
 function compareCategorical(guessValue, targetValue) {
-  if (guessValue === targetValue) return { status: 'correct', value: guessValue }
+  if (guessValue === targetValue) return { status: 'correct', value: guessValue || '' }
   // Check for related/close values (e.g., batting hand, bowling style variants)
-  const guessLower = guessValue.toLowerCase().trim()
-  const targetLower = targetValue.toLowerCase().trim()
+  const guessLower = (guessValue || '').toLowerCase().trim()
+  const targetLower = (targetValue || '').toLowerCase().trim()
 
-  // Some simple related checks:
-  // - Right Hand vs Left Hand are different but could be considered "related" if the target is one and guess is other -> we treat as different (incorrect) to keep it strict
-  // - Bowling style: fast vs medium could be considered close, but we'll keep strict match
+  return { status: 'incorrect', value: guessValue || '' }
+}
 
-  return { status: 'incorrect', value: guessValue }
+/**
+ * Helper to safely extract primary runs (score) from a player object.
+ */
+export function getPlayerRuns(player) {
+  if (!player) return 0
+  if (typeof player.runs === 'number') return player.runs
+  if (player.runs && typeof player.runs === 'object') {
+    return player.runs.odi ?? player.runs.test ?? player.runs.t20i ?? 0
+  }
+  return 0
 }
 
 /**
  * Compare a guessed player's attribute against the target player's attribute.
  * Returns an object with status and direction info for numerical attrs.
+ * direction indicates whether the TARGET is higher or lower than the guess.
  */
-function compareNumerical(guessValue, targetValue) {
-  const diff = Math.abs(guessValue - targetValue)
+function compareNumerical(guessValue, targetValue, isRuns = false) {
+  const gVal = Number(guessValue) || 0
+  const tVal = Number(targetValue) || 0
+  const diff = Math.abs(gVal - tVal)
 
-  if (diff === 0) return { status: 'correct', value: guessValue, direction: null }
+  if (diff === 0) return { status: 'correct', value: gVal, direction: null }
 
-  // Define thresholds for closeness
-  // For age, debut year, runs, wickets, matches
+  // Direction indicates whether the TARGET cricketer has a higher (more) or lower (less) value
+  const direction = tVal > gVal ? 'higher' : 'lower'
+
   let status
-  let direction // 'higher' if guess > target, 'lower' if guess < target
-
-  if (guessValue > targetValue) {
-    direction = 'higher'
+  if (isRuns) {
+    // Relative thresholds for runs (score)
+    const rel = tVal > 0 ? diff / tVal : diff
+    if (rel <= 0.1 || diff <= 500) {
+      status = 'close'
+    } else if (rel <= 0.25 || diff <= 2000) {
+      status = 'moderate'
+    } else {
+      status = 'different'
+    }
   } else {
-    direction = 'lower'
+    // Thresholds: 0-2 = close, 3-5 = moderate, >5 = far
+    if (diff <= 2) {
+      status = 'close'
+    } else if (diff <= 5) {
+      status = 'moderate'
+    } else {
+      status = 'different'
+    }
   }
 
-  // Thresholds: 0-2 = close, 3-5 = moderate, >5 = far
-  if (diff <= 2) {
-    status = 'close'
-  } else if (diff <= 5) {
-    status = 'moderate'
-  } else {
-    status = 'different'
-  }
-
-  return { status, value: guessValue, direction }
+  return { status, value: gVal, direction }
 }
 
 /**
@@ -108,11 +124,11 @@ export function comparePlayers(guessIdOrObj, targetIdOrObj) {
     role: compareCategorical(guess.role, target.role),
     battingStyle: compareCategorical(guess.battingStyle, target.battingStyle),
     bowlingStyle: compareCategorical(guess.bowlingStyle, target.bowlingStyle),
-    age: compareNumerical(guess.dateOfBirth ? calculateAge(guess.dateOfBirth) : 0, target.dateOfBirth ? calculateAge(target.dateOfBirth) : 0),
-    debutYear: compareNumerical(guess.debutYear, target.debutYear),
-    matches: compareNumerical(guess.matches.test, target.matches.test),
-    runs: compareNumerical(guess.runs.odi, target.runs.odi), // using ODI runs as primary
-    wickets: compareNumerical(guess.wickets.odi, target.wickets.odi),
+    age: compareNumerical(guess.dateOfBirth ? calculateAge(guess.dateOfBirth) : 0, target.dateOfBirth ? calculateAge(target.dateOfBirth) : 0, false),
+    debutYear: compareNumerical(guess.debutYear || 0, target.debutYear || 0, false),
+    matches: compareNumerical(guess.matches?.test ?? guess.matches?.odi ?? 0, target.matches?.test ?? target.matches?.odi ?? 0, true),
+    runs: compareNumerical(getPlayerRuns(guess), getPlayerRuns(target), true), // primary runs (score)
+    wickets: compareNumerical(guess.wickets?.odi ?? 0, target.wickets?.odi ?? 0, false),
     similarityScore: 0, // will be calculated below
   }
 
