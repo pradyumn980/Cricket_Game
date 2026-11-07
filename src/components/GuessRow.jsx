@@ -101,24 +101,50 @@ function GuessRow({ guessResult, index }) {
         </div>
 
         {/* Batting */}
-        <div className="flex items-center justify-between bg-gray-900 rounded px-3 py-2">
-          <span className="text-gray-400 text-sm">Batting</span>
-          <div className="flex items-center gap-1">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.battingStyle.status)}`}>
-              {getStatusLabel(comparison.battingStyle.status)}
-            </span>
-            <span className="text-white text-sm">{comparison.battingStyle.value}</span>
+        <div className="bg-gray-900 rounded p-3 space-y-1.5">
+          <span className="text-gray-400 text-xs uppercase tracking-wider block font-semibold">Batting & Score</span>
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-gray-400 text-xs">Style</span>
+            <div className="flex items-center gap-1">
+              <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.battingStyle?.status)}`}>
+                {getStatusLabel(comparison.battingStyle?.status)}
+              </span>
+              <span className="text-white text-xs">{comparison.battingStyle?.value}</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-1 pt-1 border-t border-gray-800">
+            <span className="text-gray-400 text-xs">Score</span>
+            <div className="flex items-center gap-1 flex-wrap justify-end">
+              <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.runs?.status)}`}>
+                {getStatusLabel(comparison.runs?.status)}
+              </span>
+              <span className="text-white text-xs font-semibold">{(comparison.runs?.value ?? 0).toLocaleString()} runs</span>
+              {getDirectionBadge(comparison.runs?.direction)}
+            </div>
           </div>
         </div>
 
         {/* Bowling */}
-        <div className="flex items-center justify-between bg-gray-900 rounded px-3 py-2">
-          <span className="text-gray-400 text-sm">Bowling</span>
-          <div className="flex items-center gap-1">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.bowlingStyle.status)}`}>
-              {getStatusLabel(comparison.bowlingStyle.status)}
-            </span>
-            <span className="text-white text-sm">{comparison.bowlingStyle.value || 'N/A'}</span>
+        <div className="bg-gray-900 rounded p-3 space-y-1.5">
+          <span className="text-gray-400 text-xs uppercase tracking-wider block font-semibold">Bowling & Wkts</span>
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-gray-400 text-xs">Style</span>
+            <div className="flex items-center gap-1">
+              <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.bowlingStyle?.status)}`}>
+                {comparison.bowlingStyle?.value ? getStatusLabel(comparison.bowlingStyle?.status) : '—'}
+              </span>
+              <span className="text-white text-xs truncate max-w-[100px]">{comparison.bowlingStyle?.value || 'None'}</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-1 pt-1 border-t border-gray-800">
+            <span className="text-gray-400 text-xs">Wickets</span>
+            <div className="flex items-center gap-1 flex-wrap justify-end">
+              <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.wickets?.status)}`}>
+                {getStatusLabel(comparison.wickets?.status)}
+              </span>
+              <span className="text-white text-xs font-semibold">{(comparison.wickets?.value ?? 0)} wkts</span>
+              {getDirectionBadge(comparison.wickets?.direction)}
+            </div>
           </div>
         </div>
 
@@ -126,11 +152,11 @@ function GuessRow({ guessResult, index }) {
         <div className="flex items-center justify-between bg-gray-900 rounded px-3 py-2">
           <span className="text-gray-400 text-sm">Age</span>
           <div className="flex items-center gap-1">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.age.status)}`}>
-              {getStatusLabel(comparison.age.status)}
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.age?.status)}`}>
+              {getStatusLabel(comparison.age?.status)}
             </span>
-            <span className="text-white text-sm">{comparison.age.value}</span>
-            {getDirectionIcon(comparison.age.direction)}
+            <span className="text-white text-sm">{comparison.age?.value}</span>
+            {comparison.age?.direction && getDirectionIcon(comparison.age?.direction)}
           </div>
         </div>
 
@@ -138,35 +164,11 @@ function GuessRow({ guessResult, index }) {
         <div className="flex items-center justify-between bg-gray-900 rounded px-3 py-2">
           <span className="text-gray-400 text-sm">Debut</span>
           <div className="flex items-center gap-1">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.debutYear.status)}`}>
-              {getStatusLabel(comparison.debutYear.status)}
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.debutYear?.status)}`}>
+              {getStatusLabel(comparison.debutYear?.status)}
             </span>
-            <span className="text-white text-sm">{comparison.debutYear.value}</span>
-            {getDirectionIcon(comparison.debutYear.direction)}
-          </div>
-        </div>
-
-        {/* Runs (Score) */}
-        <div className="flex items-center justify-between bg-gray-900 rounded px-3 py-2">
-          <span className="text-gray-400 text-sm">Score (Runs)</span>
-          <div className="flex items-center gap-1.5 flex-wrap justify-end">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.runs?.status)}`}>
-              {getStatusLabel(comparison.runs?.status)}
-            </span>
-            <span className="text-white text-sm font-semibold">{(comparison.runs?.value ?? 0).toLocaleString()}</span>
-            {getDirectionBadge(comparison.runs?.direction)}
-          </div>
-        </div>
-
-        {/* Wickets */}
-        <div className="flex items-center justify-between bg-gray-900 rounded px-3 py-2">
-          <span className="text-gray-400 text-sm">Wickets</span>
-          <div className="flex items-center gap-1">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(comparison.wickets.status)}`}>
-              {getStatusLabel(comparison.wickets.status)}
-            </span>
-            <span className="text-white text-sm">{comparison.wickets.value}</span>
-            {getDirectionIcon(comparison.wickets.direction)}
+            <span className="text-white text-sm">{comparison.debutYear?.value}</span>
+            {comparison.debutYear?.direction && getDirectionIcon(comparison.debutYear?.direction)}
           </div>
         </div>
       </div>

@@ -13,6 +13,7 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [won, setWon] = useState(false)
+  const [isQuit, setIsQuit] = useState(false)
   const [guesses, setGuesses] = useState([])
   const [attempts, setAttempts] = useState(0)
   const [maxAttempts] = useState(9999)
@@ -78,11 +79,30 @@ function App() {
     setGameStarted(true)
     setGameOver(false)
     setWon(false)
+    setIsQuit(false)
     setGuesses([])
     setAttempts(0)
     setHintsRemaining(3)
     setHintMessage('')
     setScore(0)
+  }
+
+  // Handle player quit and reveal answer
+  const handleQuit = () => {
+    if (!gameStarted || gameOver || !targetPlayer) return
+
+    const confirmed = window.confirm("Are you sure you want to quit? This will reveal the cricketer!")
+    if (!confirmed) return
+
+    setWon(false)
+    setIsQuit(true)
+    setGameOver(true)
+
+    setStats(prev => ({
+      ...prev,
+      totalGames: prev.totalGames + 1,
+      streak: 0
+    }))
   }
 
   // Handle player guess
@@ -241,6 +261,8 @@ function App() {
             onGuess={handleGuess}
             onGetHint={getHint}
             onNewGame={startNewGame}
+            onQuit={handleQuit}
+            isQuit={isQuit}
           />
         )
     }
@@ -273,6 +295,7 @@ function App() {
       {gameOver && targetPlayer && (
         <GameOverModal
           won={won}
+          isQuit={isQuit}
           targetPlayer={targetPlayer}
           score={score}
           attempts={attempts}

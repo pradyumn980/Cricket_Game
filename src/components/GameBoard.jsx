@@ -4,6 +4,7 @@ import SearchPlayer from './SearchPlayer'
 import GuessHistory from './GuessHistory'
 import HintSystem from './HintSystem'
 import ScoreCard from './ScoreCard'
+import { getPlayerRuns, getPlayerWickets } from '../utils/gameLogic'
 
 function GameBoard({
   gameStarted,
@@ -19,12 +20,17 @@ function GameBoard({
   onGuess,
   onGetHint,
   onNewGame,
+  onQuit,
+  isQuit,
 }) {
   const isUnlimited = maxAttempts === 9999
   const remainingAttempts = isUnlimited ? "∞" : maxAttempts - attempts
 
+  const targetRuns = getPlayerRuns(targetPlayer)
+  const targetWickets = getPlayerWickets(targetPlayer)
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Header with attempts and score */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -44,8 +50,8 @@ function GameBoard({
         />
       </div>
 
-      {/* Attempts indicator - unlimited mode */}
-      <div className="flex items-center gap-2 mb-4">
+      {/* Attempts indicator and I Quit button */}
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         {isUnlimited ? (
           <div className="flex items-center gap-2">
             <div className="text-2xl font-bold text-green-400">∞</div>
@@ -68,6 +74,19 @@ function GameBoard({
               </div>
             ))}
           </div>
+        )}
+
+        {/* I Quit Button */}
+        {!gameOver && gameStarted && onQuit && (
+          <button
+            onClick={onQuit}
+            type="button"
+            className="px-4 py-2 bg-red-950/50 hover:bg-red-600 text-red-300 hover:text-white border border-red-700/60 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            title="Give up and reveal the correct cricketer"
+          >
+            <span>🏳️</span>
+            <span>I Quit</span>
+          </button>
         )}
       </div>
 
@@ -93,18 +112,41 @@ function GameBoard({
         />
       )}
 
-      {/* Game over state */}
+      {/* Game over / Revealed Answer card */}
       {gameOver && !won && (
-        <div className="mt-6 p-6 bg-gray-800 rounded-lg border border-gray-700 text-center">
-          <div className="text-4xl mb-3">😔</div>
-          <h3 className="text-xl font-bold text-white mb-2">Game Over!</h3>
-          <p className="text-gray-400 mb-4">
-            The cricketer was <strong className="text-green-400">{targetPlayer?.name}</strong>
-            from <strong className="text-green-400">{targetPlayer?.country}</strong>.
+        <div className="mt-6 p-6 bg-gray-800 rounded-xl border border-gray-700 text-center shadow-xl">
+          <div className="text-4xl mb-3">🏳️</div>
+          <h3 className="text-2xl font-bold text-white mb-2">
+            {isQuit ? 'You Quit! Answer Revealed' : 'Game Over!'}
+          </h3>
+          <p className="text-gray-300 mb-4 text-base">
+            The cricketer was <strong className="text-green-400 text-xl font-bold">{targetPlayer?.name}</strong> from <strong className="text-green-400 font-semibold">{targetPlayer?.country}</strong>.
           </p>
+
+          {/* Revealed Player Details Card */}
+          <div className="max-w-lg mx-auto grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6 text-xs text-left bg-gray-900/90 p-3.5 rounded-lg border border-gray-700">
+            <div>
+              <span className="text-gray-400 block font-medium">Role</span>
+              <span className="text-white font-semibold text-sm">{targetPlayer?.role}</span>
+            </div>
+            <div>
+              <span className="text-gray-400 block font-medium">Batting</span>
+              <span className="text-white font-semibold text-sm">{targetPlayer?.battingStyle}</span>
+            </div>
+            <div>
+              <span className="text-gray-400 block font-medium">Score (Runs)</span>
+              <span className="text-green-400 font-bold text-sm">{targetRuns.toLocaleString()}</span>
+            </div>
+            <div>
+              <span className="text-gray-400 block font-medium">Wickets</span>
+              <span className="text-green-400 font-bold text-sm">{targetWickets}</span>
+            </div>
+          </div>
+
           <button
             onClick={onNewGame}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            type="button"
+            className="px-8 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold shadow-md active:scale-95"
           >
             Play Again
           </button>

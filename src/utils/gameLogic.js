@@ -59,11 +59,23 @@ export function getPlayerRuns(player) {
 }
 
 /**
+ * Helper to safely extract primary wickets from a player object.
+ */
+export function getPlayerWickets(player) {
+  if (!player) return 0
+  if (typeof player.wickets === 'number') return player.wickets
+  if (player.wickets && typeof player.wickets === 'object') {
+    return player.wickets.odi ?? player.wickets.test ?? player.wickets.t20i ?? 0
+  }
+  return 0
+}
+
+/**
  * Compare a guessed player's attribute against the target player's attribute.
  * Returns an object with status and direction info for numerical attrs.
  * direction indicates whether the TARGET is higher or lower than the guess.
  */
-function compareNumerical(guessValue, targetValue, isRuns = false) {
+function compareNumerical(guessValue, targetValue, mode = 'standard') {
   const gVal = Number(guessValue) || 0
   const tVal = Number(targetValue) || 0
   const diff = Math.abs(gVal - tVal)
@@ -74,12 +86,21 @@ function compareNumerical(guessValue, targetValue, isRuns = false) {
   const direction = tVal > gVal ? 'higher' : 'lower'
 
   let status
-  if (isRuns) {
+  if (mode === 'runs') {
     // Relative thresholds for runs (score)
     const rel = tVal > 0 ? diff / tVal : diff
     if (rel <= 0.1 || diff <= 500) {
       status = 'close'
     } else if (rel <= 0.25 || diff <= 2000) {
+      status = 'moderate'
+    } else {
+      status = 'different'
+    }
+  } else if (mode === 'wickets') {
+    // Thresholds for wickets
+    if (diff <= 10) {
+      status = 'close'
+    } else if (diff <= 30) {
       status = 'moderate'
     } else {
       status = 'different'
@@ -124,11 +145,11 @@ export function comparePlayers(guessIdOrObj, targetIdOrObj) {
     role: compareCategorical(guess.role, target.role),
     battingStyle: compareCategorical(guess.battingStyle, target.battingStyle),
     bowlingStyle: compareCategorical(guess.bowlingStyle, target.bowlingStyle),
-    age: compareNumerical(guess.dateOfBirth ? calculateAge(guess.dateOfBirth) : 0, target.dateOfBirth ? calculateAge(target.dateOfBirth) : 0, false),
-    debutYear: compareNumerical(guess.debutYear || 0, target.debutYear || 0, false),
-    matches: compareNumerical(guess.matches?.test ?? guess.matches?.odi ?? 0, target.matches?.test ?? target.matches?.odi ?? 0, true),
-    runs: compareNumerical(getPlayerRuns(guess), getPlayerRuns(target), true), // primary runs (score)
-    wickets: compareNumerical(guess.wickets?.odi ?? 0, target.wickets?.odi ?? 0, false),
+    age: compareNumerical(guess.dateOfBirth ? calculateAge(guess.dateOfBirth) : 0, target.dateOfBirth ? calculateAge(target.dateOfBirth) : 0, 'standard'),
+    debutYear: compareNumerical(guess.debutYear || 0, target.debutYear || 0, 'standard'),
+    matches: compareNumerical(guess.matches?.test ?? guess.matches?.odi ?? 0, target.matches?.test ?? target.matches?.odi ?? 0, 'runs'),
+    runs: compareNumerical(getPlayerRuns(guess), getPlayerRuns(target), 'runs'), // primary runs (score)
+    wickets: compareNumerical(getPlayerWickets(guess), getPlayerWickets(target), 'wickets'), // primary wickets
     similarityScore: 0, // will be calculated below
   }
 
